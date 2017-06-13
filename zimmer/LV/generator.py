@@ -35,7 +35,7 @@ model *LVModel()
 end
 ''')
 
-class collector:
+class Collector:
     def __init__(self, model, selections, noise_var, should_round=True):
         self.model = model
         self.selections = selections
@@ -69,9 +69,9 @@ class collector:
         returns: a matrix with the time values and selected y-values
         '''
         self.model.integrator = 'gillespie'
-        self.model.integrator.seed = seed
         self.model.integrator.variable_step_size = False
         self.model.resetAll()
+        self.model.integrator.seed = seed
 
         length = len(times)
 
@@ -81,21 +81,27 @@ class collector:
             if t != 0:
                 self.model.resetAll()
                 self.model.integrator.seed = seed
-                self.model.simulate(0,t,int(t*10+1))
+                self.model.simulate(0,t,int(t*100+1))
             result[k,:] = self.collect_selections(t)
 
         return result
 
-times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60.]
-seed = 1234
+#times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60.]
+times = np.linspace(0,100,100)
+seed = 5
 
-c = collector(LVModel, ['A','B'], noise_var=0., should_round=True)
+c = Collector(LVModel, ['A','B'], noise_var=0., should_round=True)
 datapoints = c(times, seed)
 
 # plot the traces
 LVModel.integrator = 'gillespie'
-LVModel.integrator.seed = seed
 LVModel.integrator.variable_step_size = False
 LVModel.resetAll()
-LVModel.simulate(0,100,100)
-LVModel.plot()
+LVModel.integrator.seed = 5
+LVModel.simulate(0,100,10000)
+LVModel.plot(show=False)
+
+import matplotlib.pyplot as plt
+
+plt.plot(datapoints[:,0], datapoints[:,1], label='A', marker='x')#, linestyle='None')
+plt.show()
