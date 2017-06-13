@@ -37,13 +37,15 @@ end
 ''')
 
 # more sparse
-times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60., 80., 100.]
+#times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60., 80., 100.]
 # more dense
-#times = np.linspace(0,100,50)
+times = np.linspace(0,100,50)
 seed = 5
 
-c = Collector(LVModel, ['A','B'], noise_var=0., should_round=True)
+c = Collector(LVModel, ['A','B'], noise_var=10., should_round=True)
 datapoints = c(times, seed)
+
+c.writeCSV('lv-dense-noisy10.csv', datapoints)
 
 # plot the traces
 LVModel.integrator = 'gillespie'

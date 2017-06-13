@@ -1,6 +1,6 @@
 from __future__ import division, print_function, absolute_import
 import numpy as np
-from math import sqrt
+import csv
 
 class Collector:
     def __init__(self, model, selections, noise_var, should_round=True):
@@ -22,7 +22,7 @@ class Collector:
         for k,s in enumerate(self.selections, start=1):
             result[k] = self.round(self.model['[{}]'.format(s)])
         if self.noise_var > 0:
-            result[1:] += np.random.normal(0., sqrt(noise_var), len(self.selections))
+            result[1:] += np.random.normal(0., self.noise_var, len(self.selections))
         return result
 
     def __call__(self, times, seed):
@@ -52,3 +52,10 @@ class Collector:
             result[k,:] = self.collect_selections(t)
 
         return result
+
+    def writeCSV(self, filename, datapoints):
+        with open(filename, 'w') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+            writer.writerow(['time']+self.selections)
+            for k in range(datapoints.shape[0]):
+                writer.writerow(datapoints[k,:])
