@@ -43,21 +43,23 @@ for noise in [0.]:
     sparse_times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60., 80., 100.]
     # more dense
     dense_times = np.linspace(0,100,50)
+
+    tend = 100.
     seed = 5
 
     for times in [dense_times]:
-        c = Collector(IDModel, ['A'], noise_var=10., should_round=True)
-        datapoints = c(times, seed)
+        c = Collector(IDModel, ['A'], noise_var=noise, should_round=True)
+        datapoints = c(times, tend, seed)
 
         #c.writeCSV('id-dense-noisy10.csv', datapoints)
 
         # plot the traces
         IDModel.integrator = 'gillespie'
-        IDModel.integrator.variable_step_size = False
+        IDModel.integrator.variable_step_size = True
         IDModel.resetAll()
         IDModel.integrator.seed = seed
-        IDModel.simulate(0,100,10000)
-        IDModel.plot()#(show=False)
+        IDModel.simulate(0,100)
+        IDModel.plot(show=False)
 
         import matplotlib.pyplot as plt
 

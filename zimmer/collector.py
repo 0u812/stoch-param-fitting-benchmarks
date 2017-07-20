@@ -13,19 +13,28 @@ class Collector:
         else:
             self.round = lambda x: x
 
-    def collect_selections(self, time):
+    def collect_selections(self, time, sim):
         ''' Collects the selections at the current time.
         Returns 1D array.
         '''
+        if sim.shape[0] < 1:
+            raise RuntimeError('Not enough rows')
+
         result = np.zeros(len(self.selections)+1)
         result[0] = time
-        for k,s in enumerate(self.selections, start=1):
-            result[k] = self.round(self.model['[{}]'.format(s)])
-        if self.noise_var > 0:
-            result[1:] += np.random.normal(0., self.noise_var, len(self.selections))
-        return result
 
-    def __call__(self, times, seed):
+        for r in range(sim.shape[0]-1):
+            t1 = sim[r,0]
+            t2 = sim[r+1,0]
+            if t2 > time:
+                print('collect at {}'.format(t1))
+                for k,s in enumerate(self.selections, start=1):
+                    result[k] = self.round(sim[r,k])
+                if self.noise_var > 0:
+                    result[1:] += np.random.normal(0., self.noise_var, len(self.selections))
+                return result
+
+    def __call__(self, times, tend, seed):
         ''' Collect the data points.
 
         times: list of times
@@ -36,20 +45,17 @@ class Collector:
         returns: a matrix with the time values and selected y-values
         '''
         self.model.integrator = 'gillespie'
-        self.model.integrator.variable_step_size = False
+        self.model.integrator.variable_step_size = True
         self.model.resetAll()
         self.model.integrator.seed = seed
+        sim = self.model.simulate(0,tend)
 
         length = len(times)
 
         result = np.zeros((length,1+len(self.selections)))
 
         for k,t in enumerate(times):
-            if t != 0:
-                self.model.resetAll()
-                self.model.integrator.seed = seed
-                self.model.simulate(0,t,int(t*100+1))
-            result[k,:] = self.collect_selections(t)
+            result[k,:] = self.collect_selections(t, sim)
 
         return result
 
