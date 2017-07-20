@@ -38,7 +38,7 @@ end
 ''')
 
 # for noise in [0., 10., 25., 100.]:
-for noise in [0.]:
+for noise in [0.,1.,2.,5.,10.]:
     # more sparse
     sparse_times = [0., 5., 10., 15., 20., 25., 30., 40., 50., 60., 80., 100.]
     # more dense
@@ -47,11 +47,11 @@ for noise in [0.]:
     tend = 100.
     seed = 5
 
-    for times in [dense_times]:
+    for timestr,times in zip(['dense','sparse'], [dense_times, sparse_times]):
         c = Collector(IDModel, ['A'], noise_var=noise, should_round=True)
         datapoints = c(times, tend, seed)
 
-        #c.writeCSV('id-dense-noisy10.csv', datapoints)
+        c.writeCSV('id-{}-noise-{}.csv'.format(timestr,noise), datapoints)
 
         # plot the traces
         IDModel.integrator = 'gillespie'
