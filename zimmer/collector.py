@@ -3,11 +3,12 @@ import numpy as np
 import csv
 
 class Collector:
-    def __init__(self, model, selections, noise_var, should_round=True):
+    def __init__(self, model, selections, noise_var, should_round=True, var_step=False):
         self.model = model
         self.selections = selections
         self.noise_var = noise_var
         self.should_round = should_round
+        self.var_step = var_step
         if self.should_round:
             self.round = round
         else:
@@ -27,14 +28,14 @@ class Collector:
             t1 = sim[r,0]
             t2 = sim[r+1,0]
             if t2 > time:
-                print('collect at {}'.format(t1))
+                #print('collect at {}'.format(t1))
                 for k,s in enumerate(self.selections, start=1):
                     result[k] = self.round(sim[r,k])
                 if self.noise_var > 0:
                     result[1:] += np.random.normal(0., self.noise_var, len(self.selections))
                 return result
 
-    def __call__(self, times, tend, seed):
+    def __call__(self, times, tend, seed, npoints=None):
         ''' Collect the data points.
 
         times: list of times
@@ -45,10 +46,13 @@ class Collector:
         returns: a matrix with the time values and selected y-values
         '''
         self.model.integrator = 'gillespie'
-        self.model.integrator.variable_step_size = True
+        self.model.integrator.variable_step_size = self.var_step
         self.model.resetAll()
         self.model.integrator.seed = seed
-        sim = self.model.simulate(0,tend)
+        if npoints is None:
+            sim = self.model.simulate(0,tend)
+        else:
+            sim = self.model.simulate(0,tend,npoints)
 
         length = len(times)
 
