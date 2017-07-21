@@ -76,7 +76,7 @@ end
 ''')
 
 # for noise in [0., 10., 25., 100.]:
-for noise in [0.,1.,2.,5.,10.]:
+for noise in [0.,10.,100.,500.,1000.]:
     tend = 100.
 
     # more sparse
@@ -90,7 +90,7 @@ for noise in [0.,1.,2.,5.,10.]:
         c = Collector(CAModel, ['G','PLC','Ca'], noise_var=noise, should_round=True, var_step=False)
         datapoints = c(times, tend, seed, 1000)
 
-        c.writeCSV('id-{}-noise-{}.csv'.format(timestr,noise), datapoints)
+        c.writeCSV('ca-{}-noise-{}.csv'.format(timestr,noise), datapoints)
 
         # plot the traces
         CAModel.integrator = 'gillespie'
@@ -98,11 +98,11 @@ for noise in [0.,1.,2.,5.,10.]:
         CAModel.resetAll()
         CAModel.integrator.seed = seed
         CAModel.simulate(0,tend,1000)
-        CAModel.plot(show=False)
+        #CAModel.plot(show=False)
 
         import matplotlib.pyplot as plt
 
         plt.plot(datapoints[:,0], datapoints[:,1], label='G',   marker='x', linestyle='None')
         plt.plot(datapoints[:,0], datapoints[:,2], label='PLC', marker='*', linestyle='None')
         plt.plot(datapoints[:,0], datapoints[:,3], label='Ca',  marker='o', linestyle='None')
-        plt.show()
+        #plt.show()

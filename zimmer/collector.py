@@ -3,7 +3,7 @@ import numpy as np
 import csv
 
 class Collector:
-    def __init__(self, model, selections, noise_var, should_round=True, var_step=False):
+    def __init__(self, model, selections, noise_var, should_round=True, var_step=True):
         self.model = model
         self.selections = selections
         self.noise_var = noise_var
