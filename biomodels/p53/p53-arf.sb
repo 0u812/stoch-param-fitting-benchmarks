@@ -1,0 +1,233 @@
+model *p53atm()
+
+  // Compartments and Species:
+  compartment cell;
+  substanceOnly species Mdm2 in cell, p53 in cell, Mdm2_p53 in cell, Mdm2_mRNA in cell;
+  substanceOnly species p53_mRNA in cell, ATMA in cell, ATMI in cell, p53_P in cell;
+  substanceOnly species Mdm2_P in cell, damDNA in cell, $Sink in cell, $Source in cell;
+  substanceOnly species p53deg in cell, p53syn in cell, mdm2deg in cell, mdm2syn in cell;
+  substanceOnly species Mdm2mRNAdeg in cell, Mdm2mRNAsyn in cell, $totp53 in cell;
+  substanceOnly species $totMdm2 in cell;
+
+  // Assignment Rules:
+  totp53 := p53 + Mdm2_p53 + p53_P;
+  totMdm2 := Mdm2 + Mdm2_p53 + Mdm2_P;
+
+  // Reactions:
+  p53mRNASynthesis: $Source => p53_mRNA; ksynp53mRNA*Source;
+  p53mRNADegradation: p53_mRNA => $Sink; kdegp53mRNA*p53_mRNA;
+  Mdm2Synthesis: Mdm2_mRNA => Mdm2_mRNA + Mdm2 + mdm2syn; ksynMdm2*Mdm2_mRNA;
+  Mdm2mRNASynthesis1: p53 => p53 + Mdm2_mRNA + Mdm2mRNAsyn; ksynMdm2mRNA*p53;
+  Mdm2mRNASynthesis2: p53_P => p53_P + Mdm2_mRNA + Mdm2mRNAsyn; ksynMdm2mRNA*p53_P;
+  Mdm2mRNADegradation: Mdm2_mRNA => $Sink + Mdm2mRNAdeg; kdegMdm2mRNA*Mdm2_mRNA;
+  Mdm2Degradation: Mdm2 => $Sink + mdm2deg; kdegMdm2*Mdm2*kproteff;
+  p53Synthesis: p53_mRNA => p53 + p53_mRNA + p53syn; ksynp53*p53_mRNA;
+  p53Degradation: Mdm2_p53 => Mdm2 + p53deg; kdegp53*Mdm2_p53*kproteff;
+  P53_Mdm2Binding: p53 + Mdm2 => Mdm2_p53; kbinMdm2p53*p53*Mdm2;
+  P53_Mdm2Release: Mdm2_p53 => p53 + Mdm2; krelMdm2p53*Mdm2_p53;
+  DNAdamage:  => damDNA; kdam*IR;
+  DNArepair: damDNA => $Sink; krepair*damDNA;
+  ATMactivation: damDNA + ATMI => damDNA + ATMA; kactATM*damDNA*ATMI;
+  p53phoshorylation: p53 + ATMA => p53_P + ATMA; kphosp53*p53*ATMA;
+  p53dephosorylation: p53_P => p53; kdephosp53*p53_P;
+  Mdm2phoshorylation: Mdm2 + ATMA => Mdm2_P + ATMA; kphosMdm2*Mdm2*ATMA;
+  Mdm2dephosorylation: Mdm2_P => Mdm2; kdephosMdm2*Mdm2_P;
+  Mdm2Pdegradation: Mdm2_P => $Sink + mdm2deg; kdegATMMdm2*Mdm2_P;
+  ATMInactivation: ATMA => ATMI; kinactATM*ATMA;
+
+  // Events:
+  stressCell: at time >= 3600: IR = 25;
+  stopStress: at time >= 3660: IR = 0;
+
+  // Species initializations:
+  Mdm2 = 5/cell;
+  p53 = 5/cell;
+  Mdm2_p53 = 95/cell;
+  Mdm2_mRNA = 10/cell;
+  p53_mRNA = 10/cell;
+  ATMA = 0;
+  ATMI = 200/cell;
+  p53_P = 0;
+  Mdm2_P = 0;
+  damDNA = 0;
+  Sink = 1/cell;
+  Source = 1/cell;
+  p53deg = 0;
+  p53syn = 0;
+  mdm2deg = 0;
+  mdm2syn = 0;
+  Mdm2mRNAdeg = 0;
+  Mdm2mRNAsyn = 0;
+
+  // Compartment initializations:
+  cell = 1;
+
+  // Variable initializations:
+  IR = 0;
+  IR has decagray;
+  ksynMdm2 = 0.000495;
+  ksynMdm2 has psec;
+  kdegMdm2 = 0.000433;
+  kdegMdm2 has psec;
+  ksynp53 = 0.006;
+  ksynp53 has psec;
+  kdegp53 = 0.000825;
+  kdegp53 has psec;
+  kbinMdm2p53 = 0.001155;
+  kbinMdm2p53 has pmolepsec;
+  krelMdm2p53 = 1.155e-05;
+  krelMdm2p53 has psec;
+  ksynMdm2mRNA = 0.0001;
+  ksynMdm2mRNA has psec;
+  kdegMdm2mRNA = 0.0001;
+  kdegMdm2mRNA has psec;
+  kactATM = 0.0001;
+  kactATM has pmolepsec;
+  kdegATMMdm2 = 0.0004;
+  kdegATMMdm2 has psec;
+  kinactATM = 0.0005;
+  kinactATM has psec;
+  kphosp53 = 0.0005;
+  kphosp53 has pmolepsec;
+  kdephosp53 = 0.5;
+  kdephosp53 has psec;
+  kphosMdm2 = 2;
+  kphosMdm2 has pmolepsec;
+  kdephosMdm2 = 0.5;
+  kdephosMdm2 has psec;
+  kdam = 0.08;
+  kdam has molepsecpdGy;
+  krepair = 2e-05;
+  krepair has psec;
+  kproteff = 1;
+  kproteff has dimensionless;
+  ksynp53mRNA = 0.001;
+  ksynp53mRNA has psec;
+  kdegp53mRNA = 0.0001;
+  kdegp53mRNA has psec;
+
+  // Other declarations:
+  var IR;
+  const cell, ksynMdm2, kdegMdm2, ksynp53, kdegp53, kbinMdm2p53, krelMdm2p53;
+  const ksynMdm2mRNA, kdegMdm2mRNA, kactATM, kdegATMMdm2, kinactATM, kphosp53;
+  const kdephosp53, kphosMdm2, kdephosMdm2, kdam, krepair, kproteff, ksynp53mRNA;
+  const kdegp53mRNA;
+
+  // Unit definitions:
+  unit molepsecpdGy = mole / (second * 10 gray);
+  unit decagray = 10 gray;
+  unit molepsec = mole / second;
+  unit pmolepsec = 1 / (mole * second);
+  unit psec = 1 / second;
+
+  // Display Names:
+  decagray is "dGy";
+  molepsec is "molpsec";
+  pmolepsec is "pmolpsec";
+end
+
+model *p53arf()
+
+  // Compartments and Species:
+  compartment cell;
+  substanceOnly species Mdm2 in cell, p53 in cell, Mdm2_p53 in cell, Mdm2_mRNA in cell;
+  substanceOnly species ARF in cell, ARF_Mdm2 in cell, damDNA in cell, $Sink in cell;
+  substanceOnly species $Source in cell, p53deg in cell, p53syn in cell, mdm2deg in cell;
+  substanceOnly species mdm2syn in cell, Mdm2mRNAdeg in cell, Mdm2mRNAsyn in cell;
+  substanceOnly species totdamDNA in cell, $totp53 in cell, $totMdm2 in cell;
+
+  // Assignment Rules:
+  totp53 := p53 + Mdm2_p53;
+  totMdm2 := Mdm2 + Mdm2_p53 + ARF_Mdm2;
+
+  // Reactions:
+  Mdm2Synthesis: Mdm2_mRNA => Mdm2_mRNA + Mdm2 + mdm2syn; ksynMdm2*Mdm2_mRNA;
+  Mdm2mRNASynthesis: p53 => p53 + Mdm2_mRNA + Mdm2mRNAsyn; ksynMdm2mRNA*p53;
+  Mdm2mRNADegradation: Mdm2_mRNA => $Sink + Mdm2mRNAdeg; kdegMdm2mRNA*Mdm2_mRNA;
+  Mdm2Degradation: Mdm2 => $Sink + mdm2deg; kdegMdm2*Mdm2*kproteff;
+  p53Synthesis: $Source => p53 + p53syn; ksynp53*Source;
+  p53Degradation: Mdm2_p53 => Mdm2 + p53deg; kdegp53*Mdm2_p53*kproteff;
+  P53_Mdm2Binding: p53 + Mdm2 => Mdm2_p53; kbinMdm2p53*p53*Mdm2;
+  P53_Mdm2Release: Mdm2_p53 => p53 + Mdm2; krelMdm2p53*Mdm2_p53;
+  DNAdamage:  => damDNA + totdamDNA; kdam*IR;
+  DNArepair: damDNA => $Sink; krepair*damDNA;
+  ARFactivation: damDNA => damDNA + ARF; kactARF*damDNA;
+  ARF_Mdm2Binding: ARF + Mdm2 => ARF_Mdm2; kbinARFMdm2*ARF*Mdm2;
+  ARF_Mdm2Degradation: ARF_Mdm2 => ARF + mdm2deg; kdegARFMdm2*ARF_Mdm2*kproteff;
+  ARFDegradation: ARF => $Sink; kdegARF*ARF*kproteff;
+
+  // Events:
+  stressCell: at time >= 3600: IR = 25;
+  stopStress: at time >= 3660: IR = 0;
+
+  // Species initializations:
+  Mdm2 = 5/cell;
+  p53 = 5/cell;
+  Mdm2_p53 = 95/cell;
+  Mdm2_mRNA = 0;
+  ARF = 0;
+  ARF_Mdm2 = 0;
+  damDNA = 0;
+  Sink = 1/cell;
+  Source = 1/cell;
+  p53deg = 0;
+  p53syn = 0;
+  mdm2deg = 0;
+  mdm2syn = 0;
+  Mdm2mRNAdeg = 0;
+  Mdm2mRNAsyn = 0;
+  totdamDNA = 0;
+
+  // Compartment initializations:
+  cell = 1;
+
+  // Variable initializations:
+  IR = 0;
+  IR has decagray;
+  ksynMdm2 = 0.000495;
+  ksynMdm2 has psec;
+  kdegMdm2 = 0.000433;
+  kdegMdm2 has psec;
+  ksynp53 = 0.078;
+  ksynp53 has psec;
+  kdegp53 = 0.000825;
+  kdegp53 has psec;
+  kbinMdm2p53 = 0.001155;
+  kbinMdm2p53 has pmolepsec;
+  krelMdm2p53 = 1.155e-05;
+  krelMdm2p53 has psec;
+  ksynMdm2mRNA = 0.0001;
+  ksynMdm2mRNA has psec;
+  kdegMdm2mRNA = 0.0001;
+  kdegMdm2mRNA has psec;
+  kbinARFMdm2 = 0.01;
+  kbinARFMdm2 has pmolepsec;
+  kdegARFMdm2 = 0.001;
+  kdegARFMdm2 has psec;
+  kdegARF = 0.0001;
+  kdegARF has psec;
+  kactARF = 3.3e-05;
+  kactARF has psec;
+  kdam = 0.08;
+  kdam has molepsecpdGy;
+  krepair = 2e-05;
+  krepair has psec;
+  kproteff = 1;
+  kproteff has dimensionless;
+
+  // Other declarations:
+  var IR;
+  const cell, ksynMdm2, kdegMdm2, ksynp53, kdegp53, kbinMdm2p53, krelMdm2p53;
+  const ksynMdm2mRNA, kdegMdm2mRNA, kbinARFMdm2, kdegARFMdm2, kdegARF, kactARF;
+  const kdam, krepair, kproteff;
+
+  // Unit definitions:
+  unit molepsecpdGy = mole / (second * 10 gray);
+  unit decagray = 10 gray;
+  unit molepsec = mole / second;
+  unit pmolepsec = 1 / (mole * second);
+  unit psec = 1 / second;
+
+  // Display Names:
+  decagray is "dGy";
+end
